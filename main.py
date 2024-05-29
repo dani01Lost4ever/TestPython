@@ -75,13 +75,14 @@ def search_employee():
     if user:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM TDipendenti WHERE Nome LIKE ? OR Cognome LIKE ?",
-                       (f'%{search_text}%', f'%{search_text}%'))
+        cursor.execute("SELECT * FROM TDipendenti WHERE Nome LIKE ? OR Cognome LIKE ? OR id LIKE ?",
+                       (f'%{search_text}%', f'%{search_text}%', f'%{search_text}%'))
         employees = cursor.fetchall()
 
         results = []
         for emp in employees:
             results.append({
+                'id': emp.id,
                 'Nome': emp.Nome,
                 'Cognome': emp.Cognome,
                 'DataNascita': emp.DataNascita,
@@ -119,9 +120,7 @@ def modify_employee():
     token = request.headers.get('Authorization')
     data = request.json
 
-    nome = data.get('Nome')
-    cognome = data.get('Cognome')
-    data_nascita = data.get('DataNascita')
+    id = data.get('id')
 
     user = verify_token(token)
     if user:
@@ -129,8 +128,8 @@ def modify_employee():
         cursor = conn.cursor()
 
         # Fetch the employee using composite key (Nome, Cognome, DataNascita)
-        cursor.execute("SELECT * FROM TDipendenti WHERE Nome = ? AND Cognome = ? AND DataNascita = ?",
-                       (nome, cognome, data_nascita))
+        cursor.execute("SELECT * FROM TDipendenti WHERE id = ?",
+                       (id))
         employee = cursor.fetchone()
 
         if employee:
@@ -138,12 +137,12 @@ def modify_employee():
                 """
                 UPDATE TDipendenti 
                 SET Nome = ?, Cognome = ?, DataNascita = ?, ComuneNascita = ?, 
-                    ProvinciaNascita = ?, Sesso = ?, CodiceFiscale = ? 
-                WHERE Nome = ? AND Cognome = ? AND DataNascita = ?
+                    ProvinciaNascita = ?, Sesso = ? 
+                WHERE id = ?
                 """,
                 (data['Nome'], data['Cognome'], data['DataNascita'], data['ComuneNascita'],
-                 data['ProvinciaNascita'], data['Sesso'], data['CodiceFiscale'],
-                 nome, cognome, data_nascita)
+                 data['ProvinciaNascita'], data['Sesso'],
+                 id)
             )
             conn.commit()
             return jsonify({'message': 'Employee updated successfully'}), 200
@@ -156,9 +155,7 @@ def modify_employee():
 @app.route('/delete_employee', methods=['DELETE'])
 def delete_employee():
     token = request.headers.get('Authorization')
-    nome = request.args.get('Nome')
-    cognome = request.args.get('Cognome')
-    data_nascita = request.args.get('DataNascita')
+    id = request.args.get('id')
 
     user = verify_token(token)
     if user:
@@ -166,13 +163,13 @@ def delete_employee():
         cursor = conn.cursor()
 
         # Fetch the employee using composite key (Nome, Cognome, DataNascita)
-        cursor.execute("SELECT * FROM TDipendenti WHERE Nome = ? AND Cognome = ? AND DataNascita = ?",
-                       (nome, cognome, data_nascita))
+        cursor.execute("SELECT * FROM TDipendenti WHERE id = ?",
+                       (id))
         employee = cursor.fetchone()
 
         if employee:
-            cursor.execute("DELETE FROM TDipendenti WHERE Nome = ? AND Cognome = ? AND DataNascita = ?",
-                           (nome, cognome, data_nascita))
+            cursor.execute("DELETE FROM TDipendenti WHERE id = ?",
+                           (id))
             conn.commit()
             return jsonify({'message': 'Employee deleted successfully'}), 200
         else:
@@ -180,6 +177,31 @@ def delete_employee():
     else:
         return jsonify({'error': 'Invalid or expired token'}), 401
 
+
+@app.route('/calculate_tax_code_by_id', methods=['GET'])
+def calculate_tax_code_by_id():
+    token = request.headers.get('Authorization')
+    id = request.args.get('id')
+    user = verify_token(token)
+    if user:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM TDipendenti where id = ?", (id))
+        employees = cursor.fetchall()
+
+        for emp in employees:
+            codice_fiscale = calcolaCodiceFiscale(
+                emp.Cognome, emp.Nome, emp.ComuneNascita, emp.ProvinciaNascita,
+                emp.Sesso, emp.DataNascita.day, emp.DataNascita.month, emp.DataNascita.year
+            )
+            cursor.execute(
+                "UPDATE TDipendenti SET CodiceFiscale = ? WHERE id = ?",
+                (codice_fiscale, emp.id)
+            )
+        conn.commit()
+        return jsonify({'message': 'Tax codes calculated and saved successfully'}), 200
+    else:
+        return jsonify({'error': 'Invalid or expired token'}), 401
 
 @app.route('/calculate_tax_code', methods=['GET'])
 def calculate_tax_code():
@@ -206,7 +228,6 @@ def calculate_tax_code():
         return jsonify({'message': 'Tax codes calculated and saved successfully'}), 200
     else:
         return jsonify({'error': 'Invalid or expired token'}), 401
-
 
 def solo_consonanti(testo):
     consonanti = ""
