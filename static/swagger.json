@@ -1,0 +1,331 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Employee Management API",
+    "description": "API documentation for the Employee Management application",
+    "version": "1.0.0"
+  },
+  "host": "localhost:5000",
+  "basePath": "/",
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/login": {
+      "post": {
+        "summary": "User login",
+        "description": "Authenticate user and generate a token",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "email",
+                "password"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful login",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    "/search_employee": {
+      "get": {
+        "summary": "Search employees",
+        "description": "Search for employees by name or surname",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "search_text",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "employees": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "Nome": {
+                        "type": "string"
+                      },
+                      "Cognome": {
+                        "type": "string"
+                      },
+                      "DataNascita": {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "ComuneNascita": {
+                        "type": "string"
+                      },
+                      "ProvinciaNascita": {
+                        "type": "string"
+                      },
+                      "Sesso": {
+                        "type": "string"
+                      },
+                      "CodiceFiscale": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired token"
+          }
+        }
+      }
+    },
+    "/insert_employee": {
+      "post": {
+        "summary": "Insert employee",
+        "description": "Insert new employee data",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "Nome": {
+                  "type": "string"
+                },
+                "Cognome": {
+                  "type": "string"
+                },
+                "DataNascita": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "ComuneNascita": {
+                  "type": "string"
+                },
+                "ProvinciaNascita": {
+                  "type": "string"
+                },
+                "Sesso": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "Nome",
+                "Cognome",
+                "DataNascita",
+                "ComuneNascita",
+                "Sesso"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Employee inserted successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired token"
+          }
+        }
+      }
+    },
+    "/modify_employee": {
+      "post": {
+        "summary": "Modify employee",
+        "description": "Modify existing employee data",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "DipendenteID": {
+                  "type": "integer"
+                },
+                "Nome": {
+                  "type": "string"
+                },
+                "Cognome": {
+                  "type": "string"
+                },
+                "DataNascita": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "ComuneNascita": {
+                  "type": "string"
+                },
+                "ProvinciaNascita": {
+                  "type": "string"
+                },
+                "Sesso": {
+                  "type": "string"
+                },
+                "CodiceFiscale": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "DipendenteID"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Employee updated successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Employee ID does not exist"
+          },
+          "401": {
+            "description": "Invalid or expired token"
+          }
+        }
+      }
+    },
+    "/delete_employee": {
+      "get": {
+        "summary": "Delete employee",
+        "description": "Delete employee by ID",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "DipendenteID",
+            "in": "query",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Employee deleted successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Employee ID does not exist"
+          },
+          "401": {
+            "description": "Invalid or expired token"
+          }
+        }
+      }
+    },
+    "/calculate_tax_code": {
+      "get": {
+        "summary": "Calculate tax code",
+        "description": "Calculate Codice Fiscale for all employees",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tax codes calculated and saved successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired token"
+          }
+        }
+      }
+    }
+  }
+}
